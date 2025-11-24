@@ -1,0 +1,21 @@
+# Customer Churn Prediction – CRISP-DM Project
+
+## Cấu trúc dự án
+- /data → chứa CSV
+- /src → preprocessing, modeling, predict
+- /models → chứa model.pkl
+- /demo → app Streamlit
+- /notebooks → notebook CRISP-DM
+- requirements.txt
+
+## Cách chạy model
+pip install -r requirements.txt
+
+## Train model
+Viết code trong notebook hoặc script để gọi:
+- preprocessing.load_data()
+- modeling.train_best_model()
+- modeling.save_model()
+
+## Chạy demo
+streamlit run demo/app.py
