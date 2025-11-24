@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Churn Dashboard (CRISP-DM)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .loader {
+            border-top-color: #3498db;
+            -webkit-animation: spinner 1.5s linear infinite;
+            animation: spinner 1.5s linear infinite;
+        }
+        @keyframes spinner {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .tab-btn.active {
+            border-bottom: 2px solid #2563eb;
+            color: #2563eb;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 h-screen flex overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white shadow-md hidden md:flex flex-col z-10">
+        <div class="p-6 border-b border-gray-100">
+            <h1 class="text-2xl font-bold text-blue-600"><i class="fas fa-chart-line mr-2"></i>Churn AI</h1>
+            <p class="text-xs text-gray-500 mt-1">CRISP-DM Pipeline</p>
+        </div>
+        <nav class="flex-1 p-4 space-y-2">
+            <button onclick="switchTab('predict')" id="nav-predict" class="tab-btn w-full text-left px-4 py-3 rounded-lg hover:bg-blue-50 transition active text-gray-600">
+                <i class="fas fa-user-check w-6 text-center"></i> Dự đoán
+            </button>
+            <button onclick="switchTab('training')" id="nav-training" class="tab-btn w-full text-left px-4 py-3 rounded-lg hover:bg-blue-50 transition text-gray-600">
+                <i class="fas fa-cogs w-6 text-center"></i> Huấn luyện (Train)
+            </button>
+            <button onclick="switchTab('eda')" id="nav-eda" class="tab-btn w-full text-left px-4 py-3 rounded-lg hover:bg-blue-50 transition text-gray-600">
+                <i class="fas fa-search-dollar w-6 text-center"></i> Phân tích (EDA)
+            </button>
+        </nav>
+        <div class="p-4 border-t border-gray-100">
+            <div id="api-status" class="flex items-center text-sm text-red-500">
+                <span class="w-2 h-2 rounded-full bg-red-500 mr-2"></span> API Offline
+            </div>
+            <div id="model-status" class="flex items-center text-sm text-gray-500 mt-1">
+                <i class="fas fa-box mr-2"></i> Model: Unknown
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col relative overflow-y-auto">
+        <!-- Mobile Header -->
+        <header class="md:hidden bg-white p-4 shadow-sm flex justify-between items-center sticky top-0 z-20">
+            <span class="font-bold text-blue-600">Churn AI</span>
+            <div class="space-x-4">
+                <button onclick="switchTab('predict')"><i class="fas fa-user-check"></i></button>
+                <button onclick="switchTab('training')"><i class="fas fa-cogs"></i></button>
+                <button onclick="switchTab('eda')"><i class="fas fa-chart-pie"></i></button>
+            </div>
+        </header>
+
+        <div class="p-6 md:p-10 max-w-7xl mx-auto w-full">
+            
+            <!-- Message Box -->
+            <div id="message-box" class="hidden mb-4 p-4 rounded-lg shadow-sm"></div>
+
+            <!-- SECTION: PREDICT -->
+            <section id="tab-predict" class="tab-content space-y-6">
+                <h2 class="text-2xl font-bold text-gray-800">Dự đoán Khách hàng Rời bỏ</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Form -->
+                    <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <form id="predict-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Tuổi (Age)</label>
+                                <input type="number" name="Age" value="30" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Giới tính (Gender)</label>
+                                <select name="Gender" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" required>
+                                    <option value="Female">Nữ (Female)</option>
+                                    <option value="Male">Nam (Male)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Thâm niên (Tenure - tháng)</label>
+                                <input type="number" name="Tenure" value="12" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Tần suất sử dụng (Usage Freq)</label>
+                                <input type="number" name="Usage_Frequency" value="5" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Cuộc gọi hỗ trợ (Support Calls)</label>
+                                <input type="number" name="Support_Calls" value="2" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Trễ thanh toán (Payment Delay)</label>
+                                <input type="number" name="Payment_Delay" value="0" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Loại đăng ký (Subscription)</label>
+                                <select name="Subscription_Type" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                                    <option value="Basic">Basic</option>
+                                    <option value="Standard">Standard</option>
+                                    <option value="Premium">Premium</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Hợp đồng (Contract Length)</label>
+                                <select name="Contract_Length" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                                    <option value="Monthly">Hàng tháng (Monthly)</option>
+                                    <option value="Quarterly">Hàng quý (Quarterly)</option>
+                                    <option value="Annual">Hàng năm (Annual)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Tổng chi tiêu (Total Spend)</label>
+                                <input type="number" name="Total_Spend" value="500" step="0.01" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Tương tác cuối (Last Interaction)</label>
+                                <input type="number" name="Last_Interaction" value="5" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" required>
+                            </div>
+                            
+                            <div class="md:col-span-2 mt-4">
+                                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow transition transform hover:scale-105">
+                                    <i class="fas fa-magic mr-2"></i> Dự đoán ngay
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Result -->
+                    <div class="lg:col-span-1 space-y-6">
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 h-full flex flex-col justify-center items-center text-center" id="prediction-result">
+                            <div class="text-gray-400 mb-4">
+                                <i class="fas fa-robot text-6xl"></i>
+                            </div>
+                            <h3 class="text-lg font-medium text-gray-500">Kết quả dự đoán sẽ hiện ở đây</h3>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION: TRAINING -->
+            <section id="tab-training" class="tab-content hidden space-y-6">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-bold text-gray-800">Huấn luyện Mô hình</h2>
+                    <button onclick="trainModel()" id="btn-train" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg shadow transition">
+                        <i class="fas fa-sync mr-2"></i> Train Model
+                    </button>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-700">Kết quả đánh giá (Latest Run)</h3>
+                    <div id="training-logs" class="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm h-64 overflow-y-auto whitespace-pre-wrap">Chưa có dữ liệu training... Nhấn nút Train Model để bắt đầu.</div>
+                </div>
+            </section>
+
+            <!-- SECTION: EDA -->
+            <section id="tab-eda" class="tab-content hidden space-y-6">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-bold text-gray-800">Phân tích Dữ liệu (EDA)</h2>
+                    <button onclick="loadEDA()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg shadow">
+                        <i class="fas fa-redo mr-2"></i> Làm mới
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Chart Container -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <h4 class="text-md font-semibold text-gray-700 mb-4">Phân phối nhãn (Churn vs No Churn)</h4>
+                        <div class="relative h-64 w-full">
+                            <canvas id="churnChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Stats Container -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 overflow-y-auto h-80">
+                        <h4 class="text-md font-semibold text-gray-700 mb-4">Thống kê chi tiết</h4>
+                        <pre id="eda-stats-json" class="text-xs text-gray-600 whitespace-pre-wrap font-mono"></pre>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 hidden flex justify-center items-center">
+        <div class="bg-white p-6 rounded-lg shadow-xl flex flex-col items-center">
+            <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mb-4"></div>
+            <p class="text-gray-700 font-semibold" id="loading-text">Đang xử lý...</p>
+        </div>
+    </div>
+
+<script>
+    // --- CONFIG ---
+    const API_URL = "http://127.0.0.1:8000";
+
+    // --- STATE MANAGEMENT ---
+    let churnChartInstance = null;
+
+    // --- UTILS ---
+    function showLoading(text) {
+        document.getElementById('loading-text').innerText = text;
+        document.getElementById('loading-overlay').classList.remove('hidden');
+    }
+
+    function hideLoading() {
+        document.getElementById('loading-overlay').classList.add('hidden');
+    }
+
+    function showMessage(msg, type='info') {
+        const box = document.getElementById('message-box');
+        box.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800');
+        
+        if (type === 'success') {
+            box.classList.add('bg-green-100', 'text-green-800');
+            box.innerHTML = `<i class="fas fa-check-circle mr-2"></i> ${msg}`;
+        } else if (type === 'error') {
+            box.classList.add('bg-red-100', 'text-red-800');
+            box.innerHTML = `<i class="fas fa-exclamation-circle mr-2"></i> ${msg}`;
+        }
+        
+        box.classList.remove('hidden');
+        setTimeout(() => box.classList.add('hidden'), 5000);
+    }
+
+    function switchTab(tabId) {
+        // Hide all content
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+        // Show selected
+        document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+        
+        // Update nav styles
+        document.querySelectorAll('.tab-btn').forEach(el => {
+            el.classList.remove('bg-blue-50', 'text-blue-600', 'border-r-4', 'border-blue-600');
+            el.classList.add('text-gray-600');
+        });
+        
+        const activeBtn = document.getElementById(`nav-${tabId}`);
+        if(activeBtn) {
+            activeBtn.classList.add('bg-blue-50', 'text-blue-600', 'border-r-4', 'border-blue-600');
+            activeBtn.classList.remove('text-gray-600');
+        }
+
+        if (tabId === 'eda') loadEDA();
+    }
+
+    // --- API CALLS ---
+
+    async function checkStatus() {
+        try {
+            const res = await fetch(`${API_URL}/status`);
+            const data = await res.json();
+            
+            const statusEl = document.getElementById('api-status');
+            const modelEl = document.getElementById('model-status');
+            
+            statusEl.className = "flex items-center text-sm text-green-500 font-bold";
+            statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-green-500 mr-2"></span> API Online`;
+            
+            if (data.model_trained) {
+                modelEl.innerHTML = `<i class="fas fa-check-circle mr-2 text-green-500"></i> Model: Ready`;
+            } else {
+                modelEl.innerHTML = `<i class="fas fa-times-circle mr-2 text-yellow-500"></i> Model: Not Trained`;
+            }
+        } catch (err) {
+            console.error(err);
+            const statusEl = document.getElementById('api-status');
+            statusEl.className = "flex items-center text-sm text-red-500 font-bold";
+            statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-500 mr-2"></span> API Offline`;
+        }
+    }
+
+    async function trainModel() {
+        showLoading("Đang huấn luyện mô hình... Vui lòng chờ.");
+        try {
+            const res = await fetch(`${API_URL}/train`, { method: 'POST' });
+            const data = await res.json();
+            
+            if (!res.ok) throw new Error(data.detail || "Training failed");
+
+            const logsDiv = document.getElementById('training-logs');
+            logsDiv.innerHTML = "Training Completed Successfully!\n\n" + JSON.stringify(data.results, null, 2);
+            
+            showMessage("Huấn luyện thành công!", 'success');
+            checkStatus(); // Refresh status
+        } catch (err) {
+            showMessage(`Lỗi training: ${err.message}`, 'error');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    async function loadEDA() {
+        // showLoading("Đang tải dữ liệu phân tích...");
+        try {
+            const res = await fetch(`${API_URL}/eda`);
+            const data = await res.json();
+
+            if (!res.ok) throw new Error(data.detail);
+
+            // Parse stringified stats inside the response
+            // Note: The Python API returns `eda_stats` as a string representation of a dict.
+            // We need to handle the single quotes Python uses vs double quotes JSON uses.
+            let statsStr = data.eda_stats.replace(/'/g, '"').replace(/nan/g, 'null');
+            let stats;
+            try {
+                stats = JSON.parse(statsStr);
+            } catch(e) {
+                console.warn("Basic parsing failed, displaying raw text");
+                document.getElementById('eda-stats-json').innerText = data.eda_stats;
+                return;
+            }
+
+            document.getElementById('eda-stats-json').innerText = JSON.stringify(stats, null, 2);
+
+            // Render Chart
+            renderChart(stats.target_distribution);
+
+        } catch (err) {
+            console.error(err);
+            document.getElementById('eda-stats-json').innerText = "Không thể tải dữ liệu EDA hoặc lỗi format JSON.\n" + err.message;
+        } finally {
+            // hideLoading();
+        }
+    }
+
+    function renderChart(distData) {
+        const ctx = document.getElementById('churnChart').getContext('2d');
+        
+        if (churnChartInstance) {
+            churnChartInstance.destroy();
+        }
+
+        // Prepare data
+        const labels = Object.keys(distData);
+        const values = Object.values(distData).map(v => (v * 100).toFixed(1));
+
+        churnChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels.map(l => l == 1 ? 'Churn (Rời bỏ)' : 'No Churn (Ở lại)'),
+                datasets: [{
+                    data: values,
+                    backgroundColor: ['#ef4444', '#3b82f6'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    }
+
+    // --- FORM HANDLING ---
+
+    document.getElementById('predict-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        showLoading("Đang dự đoán...");
+        
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData.entries());
+        
+        // Type conversion (String to Number for API)
+        const numericFields = ['Age', 'Tenure', 'Usage_Frequency', 'Support_Calls', 'Payment_Delay', 'Total_Spend', 'Last_Interaction'];
+        numericFields.forEach(field => {
+            if (data[field]) data[field] = parseFloat(data[field]);
+        });
+
+        try {
+            const res = await fetch(`${API_URL}/predict`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await res.json();
+            if (!res.ok) throw new Error(result.detail || "Prediction failed");
+
+            // Display Result
+            const resultDiv = document.getElementById('prediction-result');
+            const isChurn = result.prediction === 1;
+            const probPercent = (result.churn_probability * 100).toFixed(1);
+            
+            resultDiv.innerHTML = `
+                <div class="mb-2">
+                    <i class="fas ${isChurn ? 'fa-exclamation-triangle text-red-500' : 'fa-check-circle text-green-500'} text-6xl animate-bounce"></i>
+                </div>
+                <h3 class="text-2xl font-bold ${isChurn ? 'text-red-600' : 'text-green-600'}">
+                    ${isChurn ? 'KHÁCH HÀNG SẮP RỜI BỎ!' : 'KHÁCH HÀNG AN TOÀN'}
+                </h3>
+                <div class="mt-4 w-full bg-gray-200 rounded-full h-4 dark:bg-gray-200">
+                    <div class="h-4 rounded-full ${isChurn ? 'bg-red-500' : 'bg-green-500'}" style="width: ${probPercent}%"></div>
+                </div>
+                <p class="mt-2 text-gray-600 font-semibold">Xác suất rời bỏ: ${probPercent}%</p>
+            `;
+
+        } catch (err) {
+            showMessage(err.message, 'error');
+        } finally {
+            hideLoading();
+        }
+    });
+
+    // --- INIT ---
+    switchTab('predict'); // Default tab
+    checkStatus();
+    setInterval(checkStatus, 30000); // Check status every 30s
+
+</script>
+</body>
+</html>

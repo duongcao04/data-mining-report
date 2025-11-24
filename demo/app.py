@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import sys
 import os
@@ -15,6 +16,16 @@ app = FastAPI(
     title="Customer Churn Prediction API",
     description="API triển khai mô hình dự đoán rời bỏ theo quy trình CRISP-DM",
     version="1.0"
+)
+
+# --- CẤU HÌNH CORS ---
+# Cho phép frontend gọi API
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Trong production nên giới hạn domain cụ thể
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Khởi tạo predictor

@@ -8,9 +8,17 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 
-# Cấu hình đường dẫn
-DATA_PATH = '../data/customer_churn_dataset-testing-master.csv'
-ARTIFACTS_DIR = 'artifacts'
+# --- CẤU HÌNH ĐƯỜNG DẪN ĐỘNG (DYNAMIC PATHS) ---
+# Lấy đường dẫn tuyệt đối của thư mục chứa file này (src/)
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Đi ra thư mục cha (..) rồi vào folder 'data'
+DATA_PATH = os.path.join(CURRENT_DIR, '..', 'data', 'customer_churn_dataset-testing-master.csv')
+
+# Đi ra thư mục cha (..) rồi vào folder 'artifacts'
+ARTIFACTS_DIR = os.path.join(CURRENT_DIR, '..', 'artifacts')
+
+# Tạo thư mục artifacts nếu chưa tồn tại
 os.makedirs(ARTIFACTS_DIR, exist_ok=True)
 
 def load_data(path=DATA_PATH):
@@ -19,7 +27,13 @@ def load_data(path=DATA_PATH):
     Tải dữ liệu từ file CSV.
     """
     if not os.path.exists(path):
-        raise FileNotFoundError(f"Không tìm thấy file dữ liệu tại: {path}")
+        # Fallback: Nếu không thấy file ở đường dẫn tính toán, thử tìm ở đường dẫn gốc user cung cấp
+        fallback_path = '/mnt/data/customer_churn_dataset-testing-master.csv'
+        if os.path.exists(fallback_path):
+            print(f"Không tìm thấy data tại {path}, dùng fallback: {fallback_path}")
+            path = fallback_path
+        else:
+            raise FileNotFoundError(f"Không tìm thấy file dữ liệu tại: {path} hoặc {fallback_path}")
     
     df = pd.read_csv(path)
     print(f"Đã tải dữ liệu: {df.shape}")
@@ -28,7 +42,7 @@ def load_data(path=DATA_PATH):
 def perform_eda(df):
     """
     CRISP-DM: Data Understanding
-    Thực hiện phân tích khám phá dữ liệu (EDA) và trả về báo cáo dạng dictionary.
+    Thực hiện phân tích khám phá dữ liệu (EDA).
     """
     eda_report = {
         "shape": df.shape,
@@ -38,10 +52,10 @@ def perform_eda(df):
         "target_distribution": df['Churn'].value_counts(normalize=True).to_dict(),
     }
     
-    # Tính Correlation Matrix chỉ cho các cột số
+    # Chỉ tính correlation cho các cột số
     numeric_df = df.select_dtypes(include=[np.number])
-    corr_matrix = numeric_df.corr().to_dict()
-    eda_report["correlation"] = corr_matrix
+    if not numeric_df.empty:
+        eda_report["correlation"] = numeric_df.corr().to_dict()
     
     print("Đã hoàn thành EDA.")
     return eda_report
@@ -49,37 +63,32 @@ def perform_eda(df):
 def build_preprocessor(df):
     """
     CRISP-DM: Data Preparation
-    Xây dựng pipeline tiền xử lý: Imputer -> Scaler/Encoder.
+    Xây dựng pipeline tiền xử lý.
     """
-    # Xác định cột target và features
     target = 'Churn'
     if target in df.columns:
-        X = df.drop(columns=[target, 'CustomerID']) # Bỏ CustomerID vì không có ý nghĩa dự đoán
+        X = df.drop(columns=[target, 'CustomerID'], errors='ignore')
         y = df[target]
     else:
         X = df.drop(columns=['CustomerID'], errors='ignore')
         y = None
 
-    # Phân loại cột
     numeric_features = X.select_dtypes(include=['int64', 'float64']).columns
     categorical_features = X.select_dtypes(include=['object', 'category']).columns
 
     print(f"Features số: {list(numeric_features)}")
     print(f"Features phân loại: {list(categorical_features)}")
 
-    # Pipeline cho dữ liệu số: Điền khuyết bằng trung vị -> Chuẩn hóa
     numeric_transformer = Pipeline(steps=[
         ('imputer', SimpleImputer(strategy='median')),
         ('scaler', StandardScaler())
     ])
 
-    # Pipeline cho dữ liệu phân loại: Điền khuyết bằng 'missing' -> OneHotEncoding
     categorical_transformer = Pipeline(steps=[
         ('imputer', SimpleImputer(strategy='constant', fill_value='missing')),
         ('encoder', OneHotEncoder(handle_unknown='ignore', sparse_output=False))
     ])
 
-    # Kết hợp lại
     preprocessor = ColumnTransformer(
         transformers=[
             ('num', numeric_transformer, numeric_features),
@@ -89,21 +98,15 @@ def build_preprocessor(df):
     return preprocessor, X, y
 
 def run_preprocessing():
-    """Hàm chạy chính cho bước tiền xử lý"""
+    """Hàm chính chạy pipeline"""
     df = load_data()
-    
-    # Thực hiện EDA
     eda_stats = perform_eda(df)
-    
-    # Xây dựng preprocessor
     preprocessor, X, y = build_preprocessor(df)
-    
-    # Fit preprocessor trên toàn bộ dữ liệu (hoặc tập train nếu chia kỹ hơn ở bước này)
     preprocessor.fit(X)
     
-    # Lưu preprocessor
-    joblib.dump(preprocessor, os.path.join(ARTIFACTS_DIR, 'preprocessor.joblib'))
-    print("Đã lưu preprocessor vào artifacts/preprocessor.joblib")
+    save_path = os.path.join(ARTIFACTS_DIR, 'preprocessor.joblib')
+    joblib.dump(preprocessor, save_path)
+    print(f"Đã lưu preprocessor vào {save_path}")
     
     return eda_stats
 

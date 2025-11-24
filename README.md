@@ -48,7 +48,7 @@ Cung cấp các endpoint để Train lại mô hình và Dự đoán realtime.
 
 2. Cấu trúc thư mục
 
-├── api/
+├── demo/
 │   └── app.py            # FastAPI Server
 ├── artifacts/            # Chứa model và preprocessor đã lưu
 ├── src/
@@ -99,7 +99,7 @@ python src/modeling.py
 
 Bước 4: Khởi động API
 
-uvicorn api.app:app --reload
+uvicorn demo.app:app --reload
 
 
 Server sẽ chạy tại: http://127.0.0.1:8000
