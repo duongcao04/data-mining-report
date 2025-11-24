@@ -94,6 +94,7 @@ Bước 3: Huấn luyện mô hình (Lần đầu)
 Bạn có thể chạy script trực tiếp hoặc qua API.
 
 # Cách 1: Chạy script
+python -m src.preprocessing  
 python src/modeling.py
 
 
