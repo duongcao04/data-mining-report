@@ -1,15 +1,23 @@
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
+from typing import Optional
 from pydantic import BaseModel
 import sys
 import os
 import json
+from datetime import datetime
+
+# Đảm bảo log tiếng Việt không gây UnicodeEncodeError trên Windows console
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8")
 
 # Thêm thư mục src vào system path để import modules
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Import thêm hàm get_business_analytics và load_data
-from src.preprocessing import run_preprocessing, get_business_analytics, load_data
+from src.preprocessing import run_preprocessing, get_business_analytics, load_data, get_eda_stats
 from src.modeling import train_and_evaluate
 from src.predict import ChurnPredictor
 
@@ -34,32 +42,21 @@ predictor = ChurnPredictor()
 
 # --- Pydantic Models (Schema Validation) ---
 class CustomerData(BaseModel):
-    Age: int
-    Gender: str
-    Tenure: int
-    Usage_Frequency: int
-    Support_Calls: int
-    Payment_Delay: int
-    Subscription_Type: str
-    Contract_Length: str
-    Total_Spend: float
-    Last_Interaction: int
+    customerID: Optional[str] = None
+    tenure: int
+    MonthlyCharges: float
+    Contract: str
+    InternetService: str
+    PaymentMethod: str
 
     class Config:
-        # Mapping field names if needed (Pydantic uses underscores, CSV uses spaces)
-        populate_by_name = True 
         json_schema_extra = {
             "example": {
-                "Age": 40,
-                "Gender": "Male",
-                "Tenure": 24,
-                "Usage Frequency": 15,
-                "Support Calls": 1,
-                "Payment Delay": 5,
-                "Subscription Type": "Standard",
-                "Contract Length": "Annual",
-                "Total Spend": 1200.5,
-                "Last Interaction": 10
+                "tenure": 12,
+                "MonthlyCharges": 70.35,
+                "Contract": "Month-to-month",
+                "InternetService": "DSL",
+                "PaymentMethod": "Electronic check"
             }
         }
 
@@ -72,11 +69,12 @@ def root():
 @app.get("/status")
 def get_status():
     """Kiểm tra trạng thái mô hình và hệ thống"""
-    model_exists = os.path.exists('artifacts/best_model.joblib')
+    model_exists = os.path.exists('models/model.pkl')
     return {
         "status": "active",
         "model_trained": model_exists,
-        "artifacts_dir": os.path.abspath('artifacts')
+        "model_path": os.path.abspath('models/model.pkl'),
+        "models_dir": os.path.abspath('models')
     }
 
 @app.get("/eda")
@@ -86,8 +84,7 @@ def get_eda():
     Trả về kết quả phân tích dữ liệu dạng JSON.
     """
     try:
-        # Chạy lại EDA
-        stats = run_preprocessing()
+        stats = get_eda_stats()
         # SỬA LỖI: Trả về dict trực tiếp, không ép kiểu str() nữa
         return {"status": "success", "eda_stats": stats} 
     except Exception as e:
@@ -121,6 +118,23 @@ def train_model(background_tasks: BackgroundTasks):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/train/status")
+def get_train_status():
+    """
+    Trả về kết quả training mới nhất đã lưu trên ổ đĩa.
+    """
+    results_path = os.path.join('models', 'evaluation_results.json')
+    if not os.path.exists(results_path):
+        raise HTTPException(status_code=404, detail="Chưa có kết quả training. Bấm Train Model để bắt đầu.")
+
+    try:
+        with open(results_path, 'r', encoding='utf-8') as f:
+            results = json.load(f)
+        last_updated = datetime.fromtimestamp(os.path.getmtime(results_path)).isoformat()
+        return {"status": "ok", "last_updated": last_updated, "results": results}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Không đọc được kết quả training: {str(e)}")
+
 @app.post("/predict")
 def predict_churn(data: CustomerData):
     """
@@ -128,8 +142,7 @@ def predict_churn(data: CustomerData):
     """
     try:
         input_data = data.dict()
-        mapped_data = {k.replace('_', ' '): v for k, v in input_data.items()}
-        result = predictor.predict_one(mapped_data)
+        result = predictor.predict_one(input_data)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Prediction error: {str(e)}")

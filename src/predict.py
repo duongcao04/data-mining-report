@@ -3,10 +3,10 @@ import os
 import pandas as pd
 
 # --- CẤU HÌNH ĐƯỜNG DẪN ĐỘNG ---
-# Đảm bảo tìm thấy artifacts dù chạy script từ đâu
+# Đảm bảo tìm thấy model dù chạy script từ đâu
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-ARTIFACTS_DIR = os.path.join(CURRENT_DIR, '..', 'artifacts')
-MODEL_PATH = os.path.join(ARTIFACTS_DIR, 'best_model.joblib')
+MODELS_DIR = os.path.join(CURRENT_DIR, '..', 'models')
+MODEL_PATH = os.path.join(MODELS_DIR, 'model.pkl')
 
 class ChurnPredictor:
     def __init__(self):
@@ -30,6 +30,8 @@ class ChurnPredictor:
                 raise RuntimeError("Model chưa được huấn luyện hoặc không tìm thấy file model.")
 
         df = pd.DataFrame([data_dict])
+        if 'customerID' in df.columns:
+            df = df.drop(columns=['customerID'])
         
         prediction = self.model.predict(df)[0]
         probability = self.model.predict_proba(df)[0][1]
@@ -46,6 +48,8 @@ class ChurnPredictor:
             self._load_model()
         
         df = pd.DataFrame(data_list)
+        if 'customerID' in df.columns:
+            df = df.drop(columns=['customerID'])
         predictions = self.model.predict(df)
         probabilities = self.model.predict_proba(df)[:, 1]
         
@@ -62,10 +66,11 @@ if __name__ == "__main__":
     # Test nhanh
     predictor = ChurnPredictor()
     sample = {
-        "Age": 30, "Gender": "Female", "Tenure": 12, 
-        "Usage Frequency": 5, "Support Calls": 2, "Payment Delay": 0,
-        "Subscription Type": "Basic", "Contract Length": "Monthly",
-        "Total Spend": 500, "Last Interaction": 5
+        "tenure": 12,
+        "InternetService": "DSL",
+        "Contract": "Month-to-month",
+        "PaymentMethod": "Electronic check",
+        "MonthlyCharges": 70.35
     }
     try:
         print(predictor.predict_one(sample))
