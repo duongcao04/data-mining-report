@@ -8,63 +8,109 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 
-# --- CẤU HÌNH ĐƯỜNG DẪN ĐỘNG (DYNAMIC PATHS) ---
-# Lấy đường dẫn tuyệt đối của thư mục chứa file này (src/)
+# --- CẤU HÌNH ĐƯỜNG DẪN ĐỘNG ---
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-
-# Đi ra thư mục cha (..) rồi vào folder 'data'
 DATA_PATH = os.path.join(CURRENT_DIR, '..', 'data', 'customer_churn_dataset-testing-master.csv')
-
-# Đi ra thư mục cha (..) rồi vào folder 'artifacts'
 ARTIFACTS_DIR = os.path.join(CURRENT_DIR, '..', 'artifacts')
-
-# Tạo thư mục artifacts nếu chưa tồn tại
 os.makedirs(ARTIFACTS_DIR, exist_ok=True)
 
 def load_data(path=DATA_PATH):
-    """
-    CRISP-DM: Data Understanding
-    Tải dữ liệu từ file CSV.
-    """
     if not os.path.exists(path):
-        # Fallback: Nếu không thấy file ở đường dẫn tính toán, thử tìm ở đường dẫn gốc user cung cấp
         fallback_path = '/mnt/data/customer_churn_dataset-testing-master.csv'
         if os.path.exists(fallback_path):
-            print(f"Không tìm thấy data tại {path}, dùng fallback: {fallback_path}")
             path = fallback_path
         else:
-            raise FileNotFoundError(f"Không tìm thấy file dữ liệu tại: {path} hoặc {fallback_path}")
-    
-    df = pd.read_csv(path)
-    print(f"Đã tải dữ liệu: {df.shape}")
-    return df
+            raise FileNotFoundError(f"Không tìm thấy file dữ liệu tại: {path}")
+    return pd.read_csv(path)
 
 def perform_eda(df):
     """
     CRISP-DM: Data Understanding
-    Thực hiện phân tích khám phá dữ liệu (EDA).
+    Trả về dữ liệu đã xử lý để vẽ biểu đồ EDA trên Dashboard.
     """
-    eda_report = {
-        "shape": df.shape,
-        "columns": list(df.columns),
-        "missing_values": df.isnull().sum().to_dict(),
-        "description": df.describe().to_dict(),
-        "target_distribution": df['Churn'].value_counts(normalize=True).to_dict(),
-    }
+    # 1. Phân phối Target (Churn)
+    target_dist = df['Churn'].value_counts(normalize=True).to_dict()
     
-    # Chỉ tính correlation cho các cột số
+    # 2. Tương quan (Correlation) với Churn
     numeric_df = df.select_dtypes(include=[np.number])
-    if not numeric_df.empty:
-        eda_report["correlation"] = numeric_df.corr().to_dict()
-    
-    print("Đã hoàn thành EDA.")
-    return eda_report
+    correlations = {}
+    if not numeric_df.empty and 'Churn' in numeric_df.columns:
+        # Lấy top 5 tương quan dương và âm (bỏ qua chính cột Churn)
+        corr_series = numeric_df.corr()['Churn'].drop('Churn').sort_values(ascending=False)
+        # Convert sang float để tránh lỗi JSON
+        correlations = {k: float(v) for k, v in corr_series.items()}
+
+    # 3. Phân tích Categorical: Tỷ lệ Churn theo nhóm
+    # Hàm helper để tính tỷ lệ churn
+    def get_churn_rate_by_col(col_name):
+        if col_name not in df.columns: return {}
+        # Group by cột đó, tính mean của Churn (tỷ lệ rời bỏ)
+        return {str(k): float(v * 100) for k, v in df.groupby(col_name)['Churn'].mean().items()}
+
+    churn_by_contract = get_churn_rate_by_col('Contract Length')
+    churn_by_subscription = get_churn_rate_by_col('Subscription Type')
+    churn_by_gender = get_churn_rate_by_col('Gender')
+
+    # 4. Phân phối biến số (Numerical Distribution) - Ví dụ: Tenure
+    # Tạo histogram dữ liệu cho Tenure (chia làm 5 khoảng)
+    tenure_hist = {}
+    if 'Tenure' in df.columns:
+        counts, bin_edges = np.histogram(df['Tenure'].dropna(), bins=5)
+        for i in range(len(counts)):
+            label = f"{int(bin_edges[i])}-{int(bin_edges[i+1])} tháng"
+            tenure_hist[label] = int(counts[i])
+
+    return {
+        "summary": {
+            "total_rows": int(df.shape[0]),
+            "total_cols": int(df.shape[1]),
+            "missing_values": int(df.isnull().sum().sum())
+        },
+        "target_distribution": target_dist,
+        "correlations": correlations,
+        "categorical_analysis": {
+            "churn_by_contract": churn_by_contract,
+            "churn_by_subscription": churn_by_subscription,
+            "churn_by_gender": churn_by_gender
+        },
+        "numerical_distribution": {
+            "tenure_distribution": tenure_hist
+        }
+    }
+
+def get_business_analytics(df):
+    """
+    Tính toán chỉ số kinh doanh (Analytics)
+    """
+    total_revenue = float(df['Total Spend'].sum())
+    avg_revenue = float(df['Total Spend'].mean())
+    total_customers = int(len(df))
+    churn_rate = float(df['Churn'].mean() * 100)
+
+    revenue_by_sub = df.groupby('Subscription Type')['Total Spend'].sum().to_dict()
+    revenue_by_sub = {k: float(v) for k, v in revenue_by_sub.items()}
+
+    customer_by_contract = df['Contract Length'].value_counts().to_dict()
+    customer_by_contract = {k: int(v) for k, v in customer_by_contract.items()}
+
+    avg_spend_by_churn = df.groupby('Churn')['Total Spend'].mean().to_dict()
+    avg_spend_by_churn = {int(k): float(v) for k, v in avg_spend_by_churn.items()}
+
+    return {
+        "kpi": {
+            "total_revenue": total_revenue,
+            "avg_revenue_per_user": avg_revenue,
+            "total_customers": total_customers,
+            "churn_rate": churn_rate
+        },
+        "charts": {
+            "revenue_by_subscription": revenue_by_sub,
+            "customer_by_contract": customer_by_contract,
+            "avg_spend_churn_vs_loyal": avg_spend_by_churn
+        }
+    }
 
 def build_preprocessor(df):
-    """
-    CRISP-DM: Data Preparation
-    Xây dựng pipeline tiền xử lý.
-    """
     target = 'Churn'
     if target in df.columns:
         X = df.drop(columns=[target, 'CustomerID'], errors='ignore')
@@ -75,9 +121,6 @@ def build_preprocessor(df):
 
     numeric_features = X.select_dtypes(include=['int64', 'float64']).columns
     categorical_features = X.select_dtypes(include=['object', 'category']).columns
-
-    print(f"Features số: {list(numeric_features)}")
-    print(f"Features phân loại: {list(categorical_features)}")
 
     numeric_transformer = Pipeline(steps=[
         ('imputer', SimpleImputer(strategy='median')),
@@ -98,7 +141,6 @@ def build_preprocessor(df):
     return preprocessor, X, y
 
 def run_preprocessing():
-    """Hàm chính chạy pipeline"""
     df = load_data()
     eda_stats = perform_eda(df)
     preprocessor, X, y = build_preprocessor(df)
@@ -106,8 +148,6 @@ def run_preprocessing():
     
     save_path = os.path.join(ARTIFACTS_DIR, 'preprocessor.joblib')
     joblib.dump(preprocessor, save_path)
-    print(f"Đã lưu preprocessor vào {save_path}")
-    
     return eda_stats
 
 if __name__ == "__main__":

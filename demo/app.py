@@ -8,7 +8,8 @@ import json
 # Thêm thư mục src vào system path để import modules
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from src.preprocessing import run_preprocessing
+# Import thêm hàm get_business_analytics và load_data
+from src.preprocessing import run_preprocessing, get_business_analytics, load_data
 from src.modeling import train_and_evaluate
 from src.predict import ChurnPredictor
 
@@ -82,26 +83,38 @@ def get_status():
 def get_eda():
     """
     CRISP-DM: Data Understanding
-    Trả về kết quả phân tích dữ liệu.
+    Trả về kết quả phân tích dữ liệu dạng JSON.
     """
     try:
-        # Chạy lại EDA hoặc load kết quả đã lưu (ở đây chạy trực tiếp cho demo)
+        # Chạy lại EDA
         stats = run_preprocessing()
-        # Convert key numpy int64 to int for JSON serialization
-        return {"status": "success", "eda_stats": str(stats)} 
+        # SỬA LỖI: Trả về dict trực tiếp, không ép kiểu str() nữa
+        return {"status": "success", "eda_stats": stats} 
     except Exception as e:
+        # Log lỗi ra console server để dễ debug
+        print(f"Error in /eda: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/analytics")
+def get_analytics():
+    """
+    Business Analytics Endpoint
+    """
+    try:
+        df = load_data()
+        analytics_data = get_business_analytics(df)
+        return analytics_data
+    except Exception as e:
+        print(f"Error in /analytics: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Analytics Error: {str(e)}")
 
 @app.post("/train")
 def train_model(background_tasks: BackgroundTasks):
     """
     CRISP-DM: Modeling
-    Kích hoạt quy trình huấn luyện (chạy background để không block API).
     """
     try:
-        # Chạy training ngay lập tức (trong thực tế nên dùng Celery)
         results = train_and_evaluate()
-        # Reload lại predictor sau khi train xong
         global predictor
         predictor = ChurnPredictor()
         return {"status": "Training completed", "results": results}
@@ -112,17 +125,11 @@ def train_model(background_tasks: BackgroundTasks):
 def predict_churn(data: CustomerData):
     """
     CRISP-DM: Deployment
-    Dự đoán cho dữ liệu đầu vào.
     """
     try:
-        # Convert Pydantic model to dict, handle alias (Usage_Frequency -> Usage Frequency)
         input_data = data.dict()
-        # Map lại keys nếu cần thiết để khớp với CSV columns
         mapped_data = {k.replace('_', ' '): v for k, v in input_data.items()}
-        
         result = predictor.predict_one(mapped_data)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Prediction error: {str(e)}")
-
-# Để chạy server: uvicorn api.app:app --reload
