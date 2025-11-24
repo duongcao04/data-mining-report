@@ -11,10 +11,13 @@ from sklearn.pipeline import Pipeline
 
 # Import từ module preprocessing
 try:
-    from src.preprocessing import load_data, build_preprocessor, ARTIFACTS_DIR
+    from src.preprocessing import load_data, build_preprocessor
 except ImportError:
     # Fallback nếu chạy trực tiếp file này mà không setup package
-    from preprocessing import load_data, build_preprocessor, ARTIFACTS_DIR
+    from preprocessing import load_data, build_preprocessor
+
+MODELS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'models')
+os.makedirs(MODELS_DIR, exist_ok=True)
 
 def train_and_evaluate():
     """
@@ -77,12 +80,12 @@ def train_and_evaluate():
     print(f"\n>>> Mô hình tốt nhất: {best_model_name} với F1-Score: {best_score:.4f}")
     
     # 5. Lưu mô hình tốt nhất (CRISP-DM: Deployment Preparation)
-    model_path = os.path.join(ARTIFACTS_DIR, 'best_model.joblib')
+    model_path = os.path.join(MODELS_DIR, 'model.pkl')
     joblib.dump(best_pipeline, model_path)
     print(f"Đã lưu mô hình tốt nhất vào {model_path}")
     
     # Lưu báo cáo kết quả
-    with open(os.path.join(ARTIFACTS_DIR, 'evaluation_results.json'), 'w') as f:
+    with open(os.path.join(MODELS_DIR, 'evaluation_results.json'), 'w') as f:
         json.dump(results, f, indent=4)
         
     return results

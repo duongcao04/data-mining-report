@@ -36,9 +36,9 @@ Evaluation:
 
 So sánh mô hình dựa trên F1-Score, Accuracy, ROC-AUC.
 
-Chọn mô hình tốt nhất và lưu vào artifacts/best_model.joblib.
+Chọn mô hình tốt nhất và lưu vào models/model.pkl.
 
-Kết quả chi tiết lưu tại artifacts/evaluation_results.json.
+Kết quả chi tiết lưu tại models/evaluation_results.json.
 
 Deployment:
 
@@ -48,9 +48,9 @@ Cung cấp các endpoint để Train lại mô hình và Dự đoán realtime.
 
 2. Cấu trúc thư mục
 
-├── api/
+├── demo/
 │   └── app.py            # FastAPI Server
-├── artifacts/            # Chứa model và preprocessor đã lưu
+├── models/               # model.pkl, preprocessor.joblib, evaluation_results.json
 ├── src/
 │   ├── preprocessing.py  # Load data, EDA, Feature Engineering
 │   ├── modeling.py       # Train và Evaluate models
@@ -99,7 +99,7 @@ python src/modeling.py
 
 Bước 4: Khởi động API
 
-uvicorn api.app:app --reload
+uvicorn demo.app:app --reload
 
 
 Server sẽ chạy tại: http://127.0.0.1:8000
@@ -117,14 +117,9 @@ Predict: POST /predict
 Body JSON mẫu:
 
 {
-  "Age": 30,
-  "Gender": "Female",
-  "Tenure": 12,
-  "Usage_Frequency": 5,
-  "Support_Calls": 2,
-  "Payment_Delay": 0,
-  "Subscription_Type": "Basic",
-  "Contract_Length": "Monthly",
-  "Total_Spend": 500,
-  "Last_Interaction": 5
+  "tenure": 12,
+  "InternetService": "DSL",
+  "Contract": "Month-to-month",
+  "PaymentMethod": "Electronic check",
+  "MonthlyCharges": 70.35
 }

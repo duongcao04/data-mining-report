@@ -1,13 +1,23 @@
 from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi.middleware.cors import CORSMiddleware
+from typing import Optional
 from pydantic import BaseModel
 import sys
 import os
 import json
+from datetime import datetime
+
+# Đảm bảo log tiếng Việt không gây UnicodeEncodeError trên Windows console
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8")
 
 # Thêm thư mục src vào system path để import modules
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from src.preprocessing import run_preprocessing
+# Import thêm hàm get_business_analytics và load_data
+from src.preprocessing import run_preprocessing, get_business_analytics, load_data, get_eda_stats
 from src.modeling import train_and_evaluate
 from src.predict import ChurnPredictor
 
@@ -17,37 +27,36 @@ app = FastAPI(
     version="1.0"
 )
 
+# --- CẤU HÌNH CORS ---
+# Cho phép frontend gọi API
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Trong production nên giới hạn domain cụ thể
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Khởi tạo predictor
 predictor = ChurnPredictor()
 
 # --- Pydantic Models (Schema Validation) ---
 class CustomerData(BaseModel):
-    Age: int
-    Gender: str
-    Tenure: int
-    Usage_Frequency: int
-    Support_Calls: int
-    Payment_Delay: int
-    Subscription_Type: str
-    Contract_Length: str
-    Total_Spend: float
-    Last_Interaction: int
+    customerID: Optional[str] = None
+    tenure: int
+    MonthlyCharges: float
+    Contract: str
+    InternetService: str
+    PaymentMethod: str
 
     class Config:
-        # Mapping field names if needed (Pydantic uses underscores, CSV uses spaces)
-        populate_by_name = True 
         json_schema_extra = {
             "example": {
-                "Age": 40,
-                "Gender": "Male",
-                "Tenure": 24,
-                "Usage Frequency": 15,
-                "Support Calls": 1,
-                "Payment Delay": 5,
-                "Subscription Type": "Standard",
-                "Contract Length": "Annual",
-                "Total Spend": 1200.5,
-                "Last Interaction": 10
+                "tenure": 12,
+                "MonthlyCharges": 70.35,
+                "Contract": "Month-to-month",
+                "InternetService": "DSL",
+                "PaymentMethod": "Electronic check"
             }
         }
 
@@ -60,58 +69,80 @@ def root():
 @app.get("/status")
 def get_status():
     """Kiểm tra trạng thái mô hình và hệ thống"""
-    model_exists = os.path.exists('artifacts/best_model.joblib')
+    model_exists = os.path.exists('models/model.pkl')
     return {
         "status": "active",
         "model_trained": model_exists,
-        "artifacts_dir": os.path.abspath('artifacts')
+        "model_path": os.path.abspath('models/model.pkl'),
+        "models_dir": os.path.abspath('models')
     }
 
 @app.get("/eda")
 def get_eda():
     """
     CRISP-DM: Data Understanding
-    Trả về kết quả phân tích dữ liệu.
+    Trả về kết quả phân tích dữ liệu dạng JSON.
     """
     try:
-        # Chạy lại EDA hoặc load kết quả đã lưu (ở đây chạy trực tiếp cho demo)
-        stats = run_preprocessing()
-        # Convert key numpy int64 to int for JSON serialization
-        return {"status": "success", "eda_stats": str(stats)} 
+        stats = get_eda_stats()
+        # SỬA LỖI: Trả về dict trực tiếp, không ép kiểu str() nữa
+        return {"status": "success", "eda_stats": stats} 
     except Exception as e:
+        # Log lỗi ra console server để dễ debug
+        print(f"Error in /eda: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/analytics")
+def get_analytics():
+    """
+    Business Analytics Endpoint
+    """
+    try:
+        df = load_data()
+        analytics_data = get_business_analytics(df)
+        return analytics_data
+    except Exception as e:
+        print(f"Error in /analytics: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Analytics Error: {str(e)}")
 
 @app.post("/train")
 def train_model(background_tasks: BackgroundTasks):
     """
     CRISP-DM: Modeling
-    Kích hoạt quy trình huấn luyện (chạy background để không block API).
     """
     try:
-        # Chạy training ngay lập tức (trong thực tế nên dùng Celery)
         results = train_and_evaluate()
-        # Reload lại predictor sau khi train xong
         global predictor
         predictor = ChurnPredictor()
         return {"status": "Training completed", "results": results}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/train/status")
+def get_train_status():
+    """
+    Trả về kết quả training mới nhất đã lưu trên ổ đĩa.
+    """
+    results_path = os.path.join('models', 'evaluation_results.json')
+    if not os.path.exists(results_path):
+        raise HTTPException(status_code=404, detail="Chưa có kết quả training. Bấm Train Model để bắt đầu.")
+
+    try:
+        with open(results_path, 'r', encoding='utf-8') as f:
+            results = json.load(f)
+        last_updated = datetime.fromtimestamp(os.path.getmtime(results_path)).isoformat()
+        return {"status": "ok", "last_updated": last_updated, "results": results}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Không đọc được kết quả training: {str(e)}")
+
 @app.post("/predict")
 def predict_churn(data: CustomerData):
     """
     CRISP-DM: Deployment
-    Dự đoán cho dữ liệu đầu vào.
     """
     try:
-        # Convert Pydantic model to dict, handle alias (Usage_Frequency -> Usage Frequency)
         input_data = data.dict()
-        # Map lại keys nếu cần thiết để khớp với CSV columns
-        mapped_data = {k.replace('_', ' '): v for k, v in input_data.items()}
-        
-        result = predictor.predict_one(mapped_data)
+        result = predictor.predict_one(input_data)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Prediction error: {str(e)}")
-
-# Để chạy server: uvicorn api.app:app --reload

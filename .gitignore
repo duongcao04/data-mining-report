@@ -36,8 +36,6 @@ pip-delete-this-directory.txt
 htmlcov/
 
 # Virtual environment
-.venv/
-venv/
 env/
 /bin/
 /include/

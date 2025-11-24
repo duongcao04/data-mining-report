@@ -2,8 +2,11 @@ import joblib
 import os
 import pandas as pd
 
-ARTIFACTS_DIR = 'artifacts'
-MODEL_PATH = os.path.join(ARTIFACTS_DIR, 'best_model.joblib')
+# --- CẤU HÌNH ĐƯỜNG DẪN ĐỘNG ---
+# Đảm bảo tìm thấy model dù chạy script từ đâu
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+MODELS_DIR = os.path.join(CURRENT_DIR, '..', 'models')
+MODEL_PATH = os.path.join(MODELS_DIR, 'model.pkl')
 
 class ChurnPredictor:
     def __init__(self):
@@ -14,24 +17,22 @@ class ChurnPredictor:
         """Load model pipeline đã train từ disk"""
         if os.path.exists(MODEL_PATH):
             self.model = joblib.load(MODEL_PATH)
-            print("Đã load model thành công.")
+            print(f"Đã load model thành công từ: {MODEL_PATH}")
         else:
-            print(f"Cảnh báo: Không tìm thấy model tại {MODEL_PATH}. Hãy chạy train trước.")
+            print(f"CẢNH BÁO: Không tìm thấy model tại {MODEL_PATH}. Hãy chạy src/modeling.py trước.")
             self.model = None
 
     def predict_one(self, data_dict):
-        """
-        Dự đoán cho 1 khách hàng (input là dictionary)
-        """
+        """Dự đoán cho 1 mẫu dữ liệu"""
         if not self.model:
             self._load_model()
             if not self.model:
-                raise Exception("Model chưa được train!")
+                raise RuntimeError("Model chưa được huấn luyện hoặc không tìm thấy file model.")
 
-        # Chuyển dict thành DataFrame (1 dòng)
         df = pd.DataFrame([data_dict])
+        if 'customerID' in df.columns:
+            df = df.drop(columns=['customerID'])
         
-        # Dự đoán
         prediction = self.model.predict(df)[0]
         probability = self.model.predict_proba(df)[0][1]
         
@@ -42,13 +43,13 @@ class ChurnPredictor:
         }
 
     def predict_batch(self, data_list):
-        """
-        Dự đoán cho nhiều khách hàng
-        """
+        """Dự đoán cho danh sách mẫu dữ liệu"""
         if not self.model:
             self._load_model()
         
         df = pd.DataFrame(data_list)
+        if 'customerID' in df.columns:
+            df = df.drop(columns=['customerID'])
         predictions = self.model.predict(df)
         probabilities = self.model.predict_proba(df)[:, 1]
         
@@ -64,14 +65,14 @@ class ChurnPredictor:
 if __name__ == "__main__":
     # Test nhanh
     predictor = ChurnPredictor()
-    # Sample data khớp với columns trong CSV
     sample = {
-        "Age": 30, "Gender": "Female", "Tenure": 12, 
-        "Usage Frequency": 5, "Support Calls": 2, "Payment Delay": 0,
-        "Subscription Type": "Basic", "Contract Length": "Monthly",
-        "Total Spend": 500, "Last Interaction": 5
+        "tenure": 12,
+        "InternetService": "DSL",
+        "Contract": "Month-to-month",
+        "PaymentMethod": "Electronic check",
+        "MonthlyCharges": 70.35
     }
     try:
         print(predictor.predict_one(sample))
     except Exception as e:
-        print(e)
+        print(f"Lỗi: {e}")
