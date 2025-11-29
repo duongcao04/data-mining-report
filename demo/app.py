@@ -242,8 +242,8 @@ def predict_churn(data: Dict[str, Any]):
     CRISP-DM: Deployment
     """
     try:
-        input_data = data.dict()
-        result = predictor.predict_one(input_data)
+        # data đã là dict do FastAPI parse từ JSON body
+        result = predictor.predict_one(data)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Prediction error: {str(e)}")
