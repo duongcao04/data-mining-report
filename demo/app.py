@@ -1,11 +1,12 @@
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
-from typing import Optional
+from typing import Optional, Dict, Any
 from pydantic import BaseModel
 import sys
 import os
 import json
 from datetime import datetime
+import numpy as np
 
 # Đảm bảo log tiếng Việt không gây UnicodeEncodeError trên Windows console
 if hasattr(sys.stdout, "reconfigure"):
@@ -17,7 +18,13 @@ if hasattr(sys.stderr, "reconfigure"):
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Import thêm hàm get_business_analytics và load_data
-from src.preprocessing import run_preprocessing, get_business_analytics, load_data, get_eda_stats
+from src.preprocessing import (
+    run_preprocessing,
+    get_business_analytics,
+    load_data,
+    get_eda_stats,
+    build_preprocessor,
+)
 from src.modeling import train_and_evaluate
 from src.predict import ChurnPredictor
 
