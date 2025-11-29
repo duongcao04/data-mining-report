@@ -1,5 +1,7 @@
 Customer Churn Prediction Project (CRISP-DM)
 
+> 📋 **Thứ tự chạy:** Xem [RUN_ORDER.md](RUN_ORDER.md) để biết thứ tự các bước chạy dự án
+
 Dự án này xây dựng một hệ thống Machine Learning để dự đoán khách hàng rời bỏ (Churn), tuân thủ chặt chẽ 6 giai đoạn của quy trình CRISP-DM.
 
 1. Quy trình CRISP-DM trong dự án
@@ -42,11 +44,11 @@ Kết quả chi tiết lưu tại models/evaluation_results.json.
 
 Deployment:
 
-API được xây dựng bằng FastAPI tại api/app.py.
+API được xây dựng bằng FastAPI tại demo/app.py.
 
 Cung cấp các endpoint để Train lại mô hình và Dự đoán realtime.
 
-2. Cấu trúc thư mục
+2. Cấu trúc thư mục và mô tả chi tiết
 
 ├── demo/
 │   └── app.py            # FastAPI Server
@@ -60,6 +62,7 @@ Cung cấp các endpoint để Train lại mô hình và Dự đoán realtime.
 
 
 3. Hướng dẫn cài đặt và chạy
+
 
 Bước 1: Tạo và kích hoạt Virtual Environment
 
@@ -86,36 +89,72 @@ Bước 2: Cài đặt thư viện
 
 Sau khi kích hoạt môi trường ảo, hãy cài đặt các dependencies:
 
+```bash
 pip install -r requirements.txt
+```
+
+**Chi tiết các thư viện:** Xem phần Requirements trong README này.
+
+**Danh sách thư viện chính:**
+- **Xử lý dữ liệu**: pandas, numpy
+- **Machine Learning**: scikit-learn, joblib
+- **API**: fastapi, uvicorn, pydantic
+- **Dashboard**: streamlit
+- **Visualization**: matplotlib, seaborn
+- **Notebook**: jupyter, notebook, ipykernel
 
 
-Bước 3: Huấn luyện mô hình (Lần đầu)
+Bước 3: Tiền xử lý dữ liệu (Preprocessing)
 
-Bạn có thể chạy script trực tiếp hoặc qua API.
+```bash
+python src/preprocessing.py
+```
 
-# Cách 1: Chạy script
-python -m src.preprocessing  
+**Kết quả:** Tạo `models/preprocessor.joblib`
+
+Bước 4: Huấn luyện mô hình (Training)
+
+```bash
 python src/modeling.py
+```
 
+**Lưu ý:** Quá trình này có thể mất vài phút. Sau khi hoàn tất, mô hình sẽ được lưu vào `models/model.pkl`
 
-Bước 4: Khởi động API
+> 📖 **Xem thứ tự chạy chi tiết:** [RUN_ORDER.md](RUN_ORDER.md)
 
 uvicorn demo.app:app --reload
 
+**Option A: FastAPI**
+```bash
+uvicorn demo.app:app --reload
+```
+Truy cập: http://127.0.0.1:8000/docs
 
-Server sẽ chạy tại: http://127.0.0.1:8000
+**Option B: Streamlit Dashboard**
+```bash
+streamlit run demo/dashboard.py
+```
+Truy cập: http://localhost:8501
 
-4. Sử dụng API
+**Option C: Jupyter Notebook**
+```bash
+jupyter notebook notebooks/notebook.ipynb
+```
 
-Tài liệu API (Swagger UI): Truy cập http://127.0.0.1:8000/docs
+**Option D: Web Demo**
+1. Khởi động FastAPI (Option A)
+2. Mở `demo/index.html` trong trình duyệt
 
-Training: POST /train
+4. Các hình thức triển khai
 
-EDA: GET /eda
+Dự án hỗ trợ 4 hình thức triển khai chính:
 
-Predict: POST /predict
+## 4.1. FastAPI - RESTful API
 
-Body JSON mẫu:
+**Khởi động:**
+```bash
+uvicorn demo.app:app --reload
+```
 
 {
   "tenure": 12,

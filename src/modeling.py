@@ -24,7 +24,7 @@ def train_and_evaluate():
     CRISP-DM: Modeling & Evaluation
     Train 3 mô hình, so sánh và chọn best model.
     """
-    print("Bắt đầu quy trình huấn luyện...")
+    print("Bat dau quy trinh huan luyen...")
     
     # 1. Load dữ liệu
     df = load_data()
@@ -46,8 +46,9 @@ def train_and_evaluate():
     best_pipeline = None
 
     # 4. Train và Evaluate từng mô hình
-    for name, model in models.items():
-        print(f"Đang train {name}...")
+    model_list = list(models.items())
+    for idx, (name, model) in enumerate(model_list, 1):
+        print(f"Dang train {name} ({idx}/{len(model_list)})...")
         
         # Tạo pipeline đầy đủ: Preprocessor -> Model
         clf = Pipeline(steps=[('preprocessor', preprocessor),
@@ -69,7 +70,7 @@ def train_and_evaluate():
         }
         
         results[name] = metrics
-        print(f"Kết quả {name}: {metrics}")
+        print(f"Ket qua {name}: {metrics}")
         
         # Chọn mô hình tốt nhất dựa trên F1-Score (hoặc ROC-AUC tùy bài toán)
         if metrics['f1'] > best_score:
@@ -77,12 +78,12 @@ def train_and_evaluate():
             best_model_name = name
             best_pipeline = clf
 
-    print(f"\n>>> Mô hình tốt nhất: {best_model_name} với F1-Score: {best_score:.4f}")
+    print(f"\n>>> Mo hinh tot nhat: {best_model_name} voi F1-Score: {best_score:.4f}")
     
     # 5. Lưu mô hình tốt nhất (CRISP-DM: Deployment Preparation)
     model_path = os.path.join(MODELS_DIR, 'model.pkl')
     joblib.dump(best_pipeline, model_path)
-    print(f"Đã lưu mô hình tốt nhất vào {model_path}")
+    print(f"Da luu mo hinh tot nhat vao {model_path}")
     
     # Lưu báo cáo kết quả
     with open(os.path.join(MODELS_DIR, 'evaluation_results.json'), 'w') as f:

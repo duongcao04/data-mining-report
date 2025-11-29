@@ -21,6 +21,44 @@ from src.preprocessing import run_preprocessing, get_business_analytics, load_da
 from src.modeling import train_and_evaluate
 from src.predict import ChurnPredictor
 
+def convert_to_json_serializable(obj):
+    """Convert numpy/pandas types to native Python types for JSON serialization"""
+    if isinstance(obj, (np.integer, np.int64, np.int32)):
+        return int(obj)
+    elif isinstance(obj, (np.floating, np.float64, np.float32)):
+        return float(obj)
+    elif isinstance(obj, np.ndarray):
+        return obj.tolist()
+    elif isinstance(obj, dict):
+        return {k: convert_to_json_serializable(v) for k, v in obj.items()}
+    elif isinstance(obj, (list, tuple)):
+        return [convert_to_json_serializable(item) for item in obj]
+    elif hasattr(obj, 'item'):  # numpy scalar
+        return obj.item()
+    return obj
+
+def get_feature_columns():
+    """Lấy danh sách các features từ dữ liệu thực tế"""
+    try:
+        df = load_data()
+        preprocessor, X, y = build_preprocessor(df)
+        return list(X.columns)
+    except Exception as e:
+        print(f"Warning: Khong the load du lieu: {e}")
+        return None
+
+# Lấy danh sách features từ dữ liệu thực tế
+feature_columns = None  # sẽ được load lazy
+
+def ensure_feature_columns(force_reload: bool = False):
+    """Đảm bảo feature_columns đã được load."""
+    global feature_columns
+    if feature_columns and not force_reload:
+        return feature_columns
+    features = get_feature_columns()
+    feature_columns = features
+    return features
+
 app = FastAPI(
     title="Customer Churn Prediction API",
     description="API triển khai mô hình dự đoán rời bỏ theo quy trình CRISP-DM",
@@ -64,7 +102,11 @@ class CustomerData(BaseModel):
 
 @app.get("/")
 def root():
-    return {"message": "Welcome to Churn Prediction API. Visit /docs for Swagger UI."}
+    features = ensure_feature_columns()
+    return {
+        "message": "Welcome to Churn Prediction API. Visit /docs for Swagger UI.",
+        "features": features if features else "Loading..."
+    }
 
 @app.get("/status")
 def get_status():
@@ -76,6 +118,58 @@ def get_status():
         "model_path": os.path.abspath('models/model.pkl'),
         "models_dir": os.path.abspath('models')
     }
+
+@app.get("/features")
+def get_features():
+    """Lấy danh sách các features cần thiết cho prediction"""
+    features = ensure_feature_columns()
+    if features:
+        try:
+            df = load_data()
+            preprocessor, X, y = build_preprocessor(df)
+            features_info = {}
+            for col in X.columns:
+                dtype = str(X[col].dtype)
+                if dtype in ['int64', 'int32']:
+                    features_info[col] = {
+                        "type": "integer",
+                        "sample_values": X[col].unique()[:5].tolist() if X[col].dtype == 'int64' else []
+                    }
+                elif dtype in ['float64', 'float32']:
+                    features_info[col] = {
+                        "type": "float",
+                        "min": float(X[col].min()),
+                        "max": float(X[col].max()),
+                        "mean": float(X[col].mean())
+                    }
+                else:
+                    features_info[col] = {
+                        "type": "string",
+                        "unique_values": X[col].unique().tolist()[:10]
+                    }
+            
+            return {
+                "features": feature_columns,
+                "features_info": features_info
+            }
+        except Exception as e:
+            return {
+                "features": feature_columns,
+                "error": str(e)
+            }
+    else:
+        return {
+            "error": "Features chua duoc load",
+            "suggestion": "Chay python src/preprocessing.py (neu chua) hoac dam bao dataset ton tai."
+        }
+
+@app.post("/features/reload")
+def reload_features():
+    """Reload danh sách features"""
+    features = ensure_feature_columns(force_reload=True)
+    if features:
+        return {"status": "reloaded", "features": features}
+    return {"status": "error", "message": "Khong the load features. Kiem tra log server."}
 
 @app.get("/eda")
 def get_eda():
@@ -136,7 +230,7 @@ def get_train_status():
         raise HTTPException(status_code=500, detail=f"Không đọc được kết quả training: {str(e)}")
 
 @app.post("/predict")
-def predict_churn(data: CustomerData):
+def predict_churn(data: Dict[str, Any]):
     """
     CRISP-DM: Deployment
     """

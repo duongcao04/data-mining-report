@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 # Byte-compiled / optimized / compiled files
 __pycache__/
 *.pyc
@@ -8,6 +9,13 @@ __pycache__/
 *.so
 
 # Distribution / packaging
+=======
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+>>>>>>> Stashed changes
 .Python
 build/
 develop-eggs/
@@ -21,11 +29,15 @@ parts/
 sdist/
 var/
 wheels/
+<<<<<<< Updated upstream
 share/python-wheels/
+=======
+>>>>>>> Stashed changes
 *.egg-info/
 .installed.cfg
 *.egg
 
+<<<<<<< Updated upstream
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
@@ -44,6 +56,7 @@ env/
 
 # Editors and IDEs
 .vscode/
+.gemini/
 .idea/
 *.swp
 *.bak
@@ -60,3 +73,52 @@ Thumbs.db
 *.sqlite3
 *.db
 .env
+=======
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb_checkpoints
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Model files (có thể bỏ comment nếu muốn ignore)
+# artifacts/
+# models/*.pkl
+# models/*.joblib
+
+# Data files (có thể bỏ comment nếu muốn ignore)
+# data/*.csv
+# data/*.xlsx
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment variables
+.env
+.env.local
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+>>>>>>> Stashed changes
