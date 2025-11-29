@@ -237,12 +237,13 @@ def get_train_status():
         raise HTTPException(status_code=500, detail=f"Không đọc được kết quả training: {str(e)}")
 
 @app.post("/predict")
-def predict_churn(data: Dict[str, Any]):
+def predict_churn(data: CustomerData): # <--- SỬA: Thay Dict[str, Any] bằng CustomerData
     """
     CRISP-DM: Deployment
     """
     try:
-        input_data = data.dict()
+        # Khi data là CustomerData (Pydantic model), nó mới có hàm .dict()
+        input_data = data.dict() 
         result = predictor.predict_one(input_data)
         return result
     except Exception as e:
