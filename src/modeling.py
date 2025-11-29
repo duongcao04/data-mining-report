@@ -16,14 +16,7 @@ except ImportError:
     # Fallback nếu chạy trực tiếp file này mà không setup package
     from preprocessing import load_data, build_preprocessor
 
-<<<<<<< Updated upstream
 MODELS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'models')
-=======
-# Cấu hình đường dẫn (tự động xác định dựa trên vị trí file)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MODELS_DIR = os.path.join(BASE_DIR, 'models')
-MODEL_FILENAME = 'model.pkl'  # Tên file chuẩn cần lưu
->>>>>>> Stashed changes
 os.makedirs(MODELS_DIR, exist_ok=True)
 
 def train_and_evaluate():
@@ -88,20 +81,12 @@ def train_and_evaluate():
     print(f"\n>>> Mo hinh tot nhat: {best_model_name} voi F1-Score: {best_score:.4f}")
     
     # 5. Lưu mô hình tốt nhất (CRISP-DM: Deployment Preparation)
-<<<<<<< Updated upstream
     model_path = os.path.join(MODELS_DIR, 'model.pkl')
-=======
-    model_path = os.path.join(MODELS_DIR, MODEL_FILENAME)
->>>>>>> Stashed changes
     joblib.dump(best_pipeline, model_path)
     print(f"Da luu mo hinh tot nhat vao {model_path}")
     
     # Lưu báo cáo kết quả
-<<<<<<< Updated upstream
     with open(os.path.join(MODELS_DIR, 'evaluation_results.json'), 'w') as f:
-=======
-    with open(os.path.join(MODELS_DIR, 'evaluation_results.json'), 'w', encoding='utf-8') as f:
->>>>>>> Stashed changes
         json.dump(results, f, indent=4)
         
     return results
