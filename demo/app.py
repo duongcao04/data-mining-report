@@ -1,11 +1,12 @@
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
-from typing import Optional
+from typing import Optional, Dict, Any
 from pydantic import BaseModel
 import sys
 import os
 import json
 from datetime import datetime
+import numpy as np
 
 # Đảm bảo log tiếng Việt không gây UnicodeEncodeError trên Windows console
 if hasattr(sys.stdout, "reconfigure"):
