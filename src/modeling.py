@@ -16,7 +16,14 @@ except ImportError:
     # Fallback nếu chạy trực tiếp file này mà không setup package
     from preprocessing import load_data, build_preprocessor
 
+<<<<<<< Updated upstream
 MODELS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'models')
+=======
+# Cấu hình đường dẫn (tự động xác định dựa trên vị trí file)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+MODELS_DIR = os.path.join(BASE_DIR, 'models')
+MODEL_FILENAME = 'model.pkl'  # Tên file chuẩn cần lưu
+>>>>>>> Stashed changes
 os.makedirs(MODELS_DIR, exist_ok=True)
 
 def train_and_evaluate():
@@ -24,7 +31,7 @@ def train_and_evaluate():
     CRISP-DM: Modeling & Evaluation
     Train 3 mô hình, so sánh và chọn best model.
     """
-    print("Bắt đầu quy trình huấn luyện...")
+    print("Bat dau quy trinh huan luyen...")
     
     # 1. Load dữ liệu
     df = load_data()
@@ -46,8 +53,9 @@ def train_and_evaluate():
     best_pipeline = None
 
     # 4. Train và Evaluate từng mô hình
-    for name, model in models.items():
-        print(f"Đang train {name}...")
+    model_list = list(models.items())
+    for idx, (name, model) in enumerate(model_list, 1):
+        print(f"Dang train {name} ({idx}/{len(model_list)})...")
         
         # Tạo pipeline đầy đủ: Preprocessor -> Model
         clf = Pipeline(steps=[('preprocessor', preprocessor),
@@ -69,7 +77,7 @@ def train_and_evaluate():
         }
         
         results[name] = metrics
-        print(f"Kết quả {name}: {metrics}")
+        print(f"Ket qua {name}: {metrics}")
         
         # Chọn mô hình tốt nhất dựa trên F1-Score (hoặc ROC-AUC tùy bài toán)
         if metrics['f1'] > best_score:
@@ -77,15 +85,23 @@ def train_and_evaluate():
             best_model_name = name
             best_pipeline = clf
 
-    print(f"\n>>> Mô hình tốt nhất: {best_model_name} với F1-Score: {best_score:.4f}")
+    print(f"\n>>> Mo hinh tot nhat: {best_model_name} voi F1-Score: {best_score:.4f}")
     
     # 5. Lưu mô hình tốt nhất (CRISP-DM: Deployment Preparation)
+<<<<<<< Updated upstream
     model_path = os.path.join(MODELS_DIR, 'model.pkl')
+=======
+    model_path = os.path.join(MODELS_DIR, MODEL_FILENAME)
+>>>>>>> Stashed changes
     joblib.dump(best_pipeline, model_path)
-    print(f"Đã lưu mô hình tốt nhất vào {model_path}")
+    print(f"Da luu mo hinh tot nhat vao {model_path}")
     
     # Lưu báo cáo kết quả
+<<<<<<< Updated upstream
     with open(os.path.join(MODELS_DIR, 'evaluation_results.json'), 'w') as f:
+=======
+    with open(os.path.join(MODELS_DIR, 'evaluation_results.json'), 'w', encoding='utf-8') as f:
+>>>>>>> Stashed changes
         json.dump(results, f, indent=4)
         
     return results

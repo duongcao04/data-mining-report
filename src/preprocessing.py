@@ -2,12 +2,14 @@ import pandas as pd
 import numpy as np
 import joblib
 import os
+import sys
 from sklearn.model_selection import train_test_split
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 
+<<<<<<< Updated upstream
 # --- CẤU HÌNH ĐƯỜNG DẪN ĐỘNG ---
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_PATH = os.path.join(CURRENT_DIR, '..', 'data', 'Customer-Churn.csv')
@@ -21,6 +23,24 @@ FEATURE_COLUMNS = [
     'InternetService',
     'PaymentMethod'
 ]
+=======
+# Fix encoding cho Windows console (chỉ khi chạy trực tiếp, không khi import)
+if sys.platform == 'win32' and __name__ == '__main__':
+    try:
+        import io
+        if hasattr(sys.stdout, 'buffer'):
+            sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+        if hasattr(sys.stderr, 'buffer'):
+            sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+    except:
+        pass
+
+# Cấu hình đường dẫn (tự động xác định dựa trên vị trí file)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATA_PATH = os.path.join(BASE_DIR, 'data', 'Customer-Churn.csv')
+MODELS_DIR = os.path.join(BASE_DIR, 'models')
+os.makedirs(MODELS_DIR, exist_ok=True)
+>>>>>>> Stashed changes
 
 def load_data(path=DATA_PATH):
     if not os.path.exists(path):
@@ -31,6 +51,7 @@ def load_data(path=DATA_PATH):
             raise FileNotFoundError(f"Không tìm thấy file dữ liệu tại: {path}")
 
     df = pd.read_csv(path)
+<<<<<<< Updated upstream
     df.columns = df.columns.str.strip()
     df.replace(r'^\s*$', np.nan, regex=True, inplace=True)
 
@@ -39,6 +60,9 @@ def load_data(path=DATA_PATH):
     if 'SeniorCitizen' in df.columns:
         df['SeniorCitizen'] = pd.to_numeric(df['SeniorCitizen'], errors='coerce')
 
+=======
+    print(f"Da tai du lieu: {df.shape}")
+>>>>>>> Stashed changes
     return df
 
 def perform_eda(df):
@@ -46,6 +70,7 @@ def perform_eda(df):
     CRISP-DM: Data Understanding
     Trả về dữ liệu đã xử lý để vẽ biểu đồ EDA trên Dashboard.
     """
+<<<<<<< Updated upstream
     # 1. Phân phối Target (Churn)
     target_dist = {}
     if 'Churn' in df.columns:
@@ -134,17 +159,51 @@ def get_business_analytics(df):
             "avg_monthly_charge_by_churn": avg_charge_by_churn
         }
     }
+=======
+    # Convert shape tuple to list for JSON serialization
+    eda_report = {
+        "shape": list(df.shape),
+        "columns": list(df.columns),
+        "missing_values": {k: int(v) for k, v in df.isnull().sum().to_dict().items()},
+        "description": {k: {k2: float(v2) for k2, v2 in v.items()} 
+                       for k, v in df.describe().to_dict().items()},
+        "target_distribution": {str(k): float(v) for k, v in df['Churn'].value_counts(normalize=True).to_dict().items()} if 'Churn' in df.columns else {},
+    }
+    
+    # Tính Correlation Matrix chỉ cho các cột số
+    numeric_df = df.select_dtypes(include=[np.number])
+    corr_matrix = {k: {k2: float(v2) for k2, v2 in v.items()} 
+                   for k, v in numeric_df.corr().to_dict().items()}
+    eda_report["correlation"] = corr_matrix
+    
+    print("Da hoan thanh EDA.")
+    return eda_report
+>>>>>>> Stashed changes
 
 def build_preprocessor(df):
     df = df.copy()
     target = 'Churn'
     if target in df.columns:
+<<<<<<< Updated upstream
         y = df[target].map({'Yes': 1, 'No': 0})
         X = df.drop(columns=[target, 'customerID'], errors='ignore')
         mask = y.notna()
         y = y[mask]
         X = X.loc[mask]
     else:
+=======
+        # Bỏ customerID (có thể viết hoa hoặc thường) vì không có ý nghĩa dự đoán
+        id_cols = [col for col in df.columns if 'customerid' in col.lower() or 'customer_id' in col.lower()]
+        X = df.drop(columns=[target] + id_cols)
+        # Convert Churn từ Yes/No sang 1/0 nếu cần
+        if df[target].dtype == 'object':
+            y = (df[target] == 'Yes').astype(int)
+        else:
+            y = df[target]
+    else:
+        id_cols = [col for col in df.columns if 'customerid' in col.lower() or 'customer_id' in col.lower()]
+        X = df.drop(columns=id_cols, errors='ignore')
+>>>>>>> Stashed changes
         y = None
         X = df.drop(columns=['customerID'], errors='ignore')
 
@@ -184,8 +243,15 @@ def run_preprocessing():
     preprocessor, X, y = build_preprocessor(df)
     preprocessor.fit(X)
     
+<<<<<<< Updated upstream
     save_path = os.path.join(MODELS_DIR, 'preprocessor.joblib')
     joblib.dump(preprocessor, save_path)
+=======
+    # Lưu preprocessor
+    joblib.dump(preprocessor, os.path.join(MODELS_DIR, 'preprocessor.joblib'))
+    print("Da luu preprocessor vao models/preprocessor.joblib")
+    
+>>>>>>> Stashed changes
     return eda_stats
 
 if __name__ == "__main__":
