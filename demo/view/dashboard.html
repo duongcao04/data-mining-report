@@ -14,7 +14,7 @@
 
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
         }
 
         .loader {
@@ -113,80 +113,49 @@
                     <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                         <form id="predict-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Tuổi (Age)</label>
-                                <input type="number" name="Age" value="30"
-                                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
-                                    required />
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Giới tính (Gender)</label>
-                                <select name="Gender"
-                                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" required>
-                                    <option value="Female">Nữ (Female)</option>
-                                    <option value="Male">Nam (Male)</option>
-                                </select>
-                            </div>
-                            <div>
                                 <label class="block text-sm font-medium text-gray-700">Thâm niên (Tenure -
                                     tháng)</label>
-                                <input type="number" name="Tenure" value="12"
+                                <input type="number" name="tenure" value="12" min="0"
                                     class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
                                     required />
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Tần suất sử dụng (Usage
-                                    Freq)</label>
-                                <input type="number" name="Usage_Frequency" value="5"
+                                <label class="block text-sm font-medium text-gray-700">Cước tháng (Monthly
+                                    Charges)</label>
+                                <input type="number" step="0.01" name="MonthlyCharges" value="70.35"
                                     class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
                                     required />
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Cuộc gọi hỗ trợ (Support
-                                    Calls)</label>
-                                <input type="number" name="Support_Calls" value="2"
-                                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                                    required />
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Trễ thanh toán (Payment
-                                    Delay)</label>
-                                <input type="number" name="Payment_Delay" value="0"
-                                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                                    required />
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Loại đăng ký
-                                    (Subscription)</label>
-                                <select name="Subscription_Type"
-                                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
-                                    <option value="Basic">Basic</option>
-                                    <option value="Standard">Standard</option>
-                                    <option value="Premium">Premium</option>
+                                <label class="block text-sm font-medium text-gray-700">Loại hợp đồng (Contract
+                                    Type)</label>
+                                <select name="Contract"
+                                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" required>
+                                    <option value="Month-to-month">Theo tháng</option>
+                                    <option value="One year">1 năm</option>
+                                    <option value="Two year">2 năm</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Hợp đồng (Contract
-                                    Length)</label>
-                                <select name="Contract_Length"
-                                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
-                                    <option value="Monthly">Hàng tháng (Monthly)</option>
-                                    <option value="Quarterly">Hàng quý (Quarterly)</option>
-                                    <option value="Annual">Hàng năm (Annual)</option>
+                                <label class="block text-sm font-medium text-gray-700">Dịch vụ Internet</label>
+                                <select name="InternetService"
+                                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" required>
+                                    <option value="DSL">DSL</option>
+                                    <option value="Fiber optic">Fiber optic</option>
+                                    <option value="No">Không</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Tổng chi tiêu (Total
-                                    Spend)</label>
-                                <input type="number" name="Total_Spend" value="500" step="0.01"
-                                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                                    required />
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Tương tác cuối (Last
-                                    Interaction)</label>
-                                <input type="number" name="Last_Interaction" value="5"
-                                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-                                    required />
+                                <label class="block text-sm font-medium text-gray-700">Phương thức thanh toán</label>
+                                <select name="PaymentMethod"
+                                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" required>
+                                    <option value="Electronic check">Electronic check</option>
+                                    <option value="Mailed check">Mailed check</option>
+                                    <option value="Bank transfer (automatic)">
+                                        Bank transfer
+                                    </option>
+                                    <option value="Credit card (automatic)">Credit card</option>
+                                </select>
                             </div>
 
                             <div class="md:col-span-2 mt-4">
@@ -289,7 +258,7 @@
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                         <h4 class="text-md font-semibold text-gray-700 mb-4">
-                            Doanh thu theo Gói cước
+                            Doanh thu theo Hợp đồng
                         </h4>
                         <div class="relative h-64 w-full">
                             <canvas id="revenueChart"></canvas>
@@ -297,7 +266,7 @@
                     </div>
                     <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                         <h4 class="text-md font-semibold text-gray-700 mb-4">
-                            Khách hàng theo Hợp đồng
+                            Khách hàng theo Dịch vụ Internet
                         </h4>
                         <div class="relative h-64 w-full">
                             <canvas id="contractChart"></canvas>
@@ -305,7 +274,7 @@
                     </div>
                     <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-2">
                         <h4 class="text-md font-semibold text-gray-700 mb-4">
-                            Chi tiêu trung bình: Khách Rời bỏ vs Trung thành
+                            Cước tháng trung bình: Churn vs Loyal
                         </h4>
                         <div class="relative h-64 w-full">
                             <canvas id="churnSpendChart"></canvas>
@@ -328,7 +297,7 @@
                         Kết quả đánh giá (Latest Run)
                     </h3>
                     <div id="training-logs"
-                        class="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm h-64 overflow-y-auto whitespace-pre-wrap">
+                        class="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm overflow-y-auto whitespace-pre-wrap">
                         Chưa có dữ liệu training... Nhấn nút Train Model để bắt đầu.
                     </div>
                 </div>
@@ -377,7 +346,7 @@
                     <!-- Chart 3: Churn Rate by Category -->
                     <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 md:col-span-2">
                         <h4 class="text-md font-semibold text-gray-700 mb-4">
-                            Tỷ lệ Rời bỏ theo Hợp đồng & Gói cước (%)
+                            Tỷ lệ Rời bỏ theo Hợp đồng (%)
                         </h4>
                         <div class="relative h-64 w-full">
                             <canvas id="categoryChart"></canvas>
@@ -411,47 +380,47 @@
 
     <script>
         // --- CONFIG ---
-        const API_URL = 'http://127.0.0.1:8000';
+        const API_URL = "http://127.0.0.1:8000";
 
         // --- STATE MANAGEMENT ---
         let charts = {};
 
         // --- UTILS ---
         function showLoading(text) {
-            document.getElementById('loading-text').innerText = text;
-            document.getElementById('loading-overlay').classList.remove('hidden');
+            document.getElementById("loading-text").innerText = text;
+            document.getElementById("loading-overlay").classList.remove("hidden");
         }
 
         function hideLoading() {
-            document.getElementById('loading-overlay').classList.add('hidden');
+            document.getElementById("loading-overlay").classList.add("hidden");
         }
 
-        function showMessage(msg, type = 'info') {
-            const box = document.getElementById('message-box');
+        function showMessage(msg, type = "info") {
+            const box = document.getElementById("message-box");
             box.classList.remove(
-                'hidden',
-                'bg-green-100',
-                'text-green-800',
-                'bg-red-100',
-                'text-red-800'
+                "hidden",
+                "bg-green-100",
+                "text-green-800",
+                "bg-red-100",
+                "text-red-800"
             );
 
-            if (type === 'success') {
-                box.classList.add('bg-green-100', 'text-green-800');
+            if (type === "success") {
+                box.classList.add("bg-green-100", "text-green-800");
                 box.innerHTML = `<i class="fas fa-check-circle mr-2"></i> ${msg}`;
-            } else if (type === 'error') {
-                box.classList.add('bg-red-100', 'text-red-800');
+            } else if (type === "error") {
+                box.classList.add("bg-red-100", "text-red-800");
                 box.innerHTML = `<i class="fas fa-exclamation-circle mr-2"></i> ${msg}`;
             }
 
-            box.classList.remove('hidden');
-            setTimeout(() => box.classList.add('hidden'), 5000);
+            box.classList.remove("hidden");
+            setTimeout(() => box.classList.add("hidden"), 5000);
         }
 
         function formatCurrency(value) {
-            return new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: 'USD',
+            return new Intl.NumberFormat("en-US", {
+                style: "currency",
+                currency: "USD",
             }).format(value);
         }
 
@@ -464,33 +433,34 @@
 
         function switchTab(tabId) {
             document
-                .querySelectorAll('.tab-content')
-                .forEach((el) => el.classList.add('hidden'));
-            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+                .querySelectorAll(".tab-content")
+                .forEach((el) => el.classList.add("hidden"));
+            document.getElementById(`tab-${tabId}`).classList.remove("hidden");
 
-            document.querySelectorAll('.tab-btn').forEach((el) => {
+            document.querySelectorAll(".tab-btn").forEach((el) => {
                 el.classList.remove(
-                    'bg-blue-50',
-                    'text-blue-600',
-                    'border-r-4',
-                    'border-blue-600'
+                    "bg-blue-50",
+                    "text-blue-600",
+                    "border-r-4",
+                    "border-blue-600"
                 );
-                el.classList.add('text-gray-600');
+                el.classList.add("text-gray-600");
             });
 
             const activeBtn = document.getElementById(`nav-${tabId}`);
             if (activeBtn) {
                 activeBtn.classList.add(
-                    'bg-blue-50',
-                    'text-blue-600',
-                    'border-r-4',
-                    'border-blue-600'
+                    "bg-blue-50",
+                    "text-blue-600",
+                    "border-r-4",
+                    "border-blue-600"
                 );
-                activeBtn.classList.remove('text-gray-600');
+                activeBtn.classList.remove("text-gray-600");
             }
 
-            if (tabId === 'eda') loadEDA();
-            if (tabId === 'analytics') loadAnalytics();
+            if (tabId === "eda") loadEDA();
+            if (tabId === "analytics") loadAnalytics();
+            if (tabId === "training") loadTrainingStatus();
         }
 
         // --- API CALLS ---
@@ -500,11 +470,11 @@
                 const res = await fetch(`${API_URL}/status`);
                 const data = await res.json();
 
-                const statusEl = document.getElementById('api-status');
-                const modelEl = document.getElementById('model-status');
+                const statusEl = document.getElementById("api-status");
+                const modelEl = document.getElementById("model-status");
 
                 statusEl.className =
-                    'flex items-center text-sm text-green-500 font-bold';
+                    "flex items-center text-sm text-green-500 font-bold";
                 statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-green-500 mr-2"></span> API Online`;
 
                 if (data.model_trained) {
@@ -514,57 +484,83 @@
                 }
             } catch (err) {
                 console.error(err);
-                const statusEl = document.getElementById('api-status');
+                const statusEl = document.getElementById("api-status");
                 statusEl.className =
-                    'flex items-center text-sm text-red-500 font-bold';
+                    "flex items-center text-sm text-red-500 font-bold";
                 statusEl.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-500 mr-2"></span> API Offline`;
             }
         }
 
         async function trainModel() {
-            showLoading('Đang huấn luyện mô hình... Vui lòng chờ.');
+            showLoading("Đang huấn luyện mô hình... Vui lòng chờ.");
             try {
-                const res = await fetch(`${API_URL}/train`, { method: 'POST' });
+                const res = await fetch(`${API_URL}/train`, { method: "POST" });
                 const data = await res.json();
-                if (!res.ok) throw new Error(data.detail || 'Training failed');
+                if (!res.ok) throw new Error(data.detail || "Training failed");
 
-                document.getElementById('training-logs').innerHTML =
-                    'Training Completed Successfully!\n\n' +
-                    JSON.stringify(data.results, null, 2);
-                showMessage('Huấn luyện thành công!', 'success');
+                console.log("Train response:", data);
+                const statusMsg = data.status || "Training Completed";
+                const payload = data.results ?? data;
+                document.getElementById(
+                    "training-logs"
+                ).textContent = `${statusMsg}\n\n${JSON.stringify(payload, null, 2)}`;
+                showMessage("Huấn luyện thành công!", "success");
                 checkStatus();
+                loadTrainingStatus();
             } catch (err) {
-                showMessage(`Lỗi training: ${err.message}`, 'error');
+                showMessage(`Lỗi training: ${err.message}`, "error");
             } finally {
                 hideLoading();
             }
         }
 
+        async function loadTrainingStatus() {
+            const logEl = document.getElementById("training-logs");
+            try {
+                const res = await fetch(`${API_URL}/train/status`);
+                if (!res.ok) throw new Error(await res.text());
+                const data = await res.json();
+                const statusMsg = data.last_updated
+                    ? `Kết quả cập nhật lúc: ${new Date(
+                        data.last_updated
+                    ).toLocaleString()}`
+                    : "Kết quả huấn luyện mới nhất";
+                logEl.textContent = `${statusMsg}\n\n${JSON.stringify(
+                    data.results,
+                    null,
+                    2
+                )}`;
+            } catch (err) {
+                logEl.textContent =
+                    "Chưa có dữ liệu training... Nhấn nút Train Model để bắt đầu.";
+            }
+        }
+
         async function loadAnalytics() {
-            document.getElementById('analytics-error').classList.add('hidden');
-            showLoading('Đang tải phân tích kinh doanh...');
+            document.getElementById("analytics-error").classList.add("hidden");
+            showLoading("Đang tải phân tích kinh doanh...");
             try {
                 const res = await fetch(`${API_URL}/analytics`);
                 if (!res.ok) throw new Error(await res.text());
                 const data = await res.json();
 
-                document.getElementById('kpi-revenue').innerText = formatCurrency(
+                document.getElementById("kpi-revenue").innerText = formatCurrency(
                     data.kpi.total_revenue
                 );
-                document.getElementById('kpi-users').innerText =
+                document.getElementById("kpi-users").innerText =
                     data.kpi.total_customers.toLocaleString();
-                document.getElementById('kpi-arpu').innerText = formatCurrency(
+                document.getElementById("kpi-arpu").innerText = formatCurrency(
                     data.kpi.avg_revenue_per_user
                 );
-                document.getElementById('kpi-churn-rate').innerText =
-                    data.kpi.churn_rate.toFixed(1) + '%';
+                document.getElementById("kpi-churn-rate").innerText =
+                    data.kpi.churn_rate.toFixed(1) + "%";
 
-                renderRevenueChart(data.charts.revenue_by_subscription);
-                renderContractChart(data.charts.customer_by_contract);
-                renderChurnSpendChart(data.charts.avg_spend_churn_vs_loyal);
+                renderRevenueChart(data.charts.revenue_by_contract);
+                renderContractChart(data.charts.customer_by_internet);
+                renderChurnSpendChart(data.charts.avg_monthly_charge_by_churn);
             } catch (err) {
-                document.getElementById('analytics-error').classList.remove('hidden');
-                document.getElementById('analytics-error-msg').innerText =
+                document.getElementById("analytics-error").classList.remove("hidden");
+                document.getElementById("analytics-error-msg").innerText =
                     err.message;
             } finally {
                 hideLoading();
@@ -572,21 +568,21 @@
         }
 
         async function loadEDA() {
-            showLoading('Đang tải EDA...');
+            showLoading("Đang tải EDA...");
             try {
                 const res = await fetch(`${API_URL}/eda`);
                 if (!res.ok) throw new Error(await res.text());
                 const data = await res.json();
 
                 if (!data || !data.eda_stats) {
-                    throw new Error('Dữ liệu EDA không hợp lệ hoặc thiếu');
+                    throw new Error("Dữ liệu EDA không hợp lệ hoặc thiếu");
                 }
 
                 renderEDACharts(data.eda_stats);
-                showMessage('Dữ liệu EDA đã được tải thành công!', 'success');
+                showMessage("Dữ liệu EDA đã được tải thành công!", "success");
             } catch (err) {
-                console.error('EDA Error:', err);
-                showMessage('Lỗi tải EDA: ' + err.message, 'error');
+                console.error("EDA Error:", err);
+                showMessage("Lỗi tải EDA: " + err.message, "error");
             } finally {
                 hideLoading();
             }
@@ -594,16 +590,16 @@
 
         // --- CHART RENDERERS (ANALYTICS) ---
         function renderRevenueChart(data) {
-            destroyChart('revenue');
-            charts['revenue'] = new Chart(document.getElementById('revenueChart'), {
-                type: 'bar',
+            destroyChart("revenue");
+            charts["revenue"] = new Chart(document.getElementById("revenueChart"), {
+                type: "bar",
                 data: {
                     labels: Object.keys(data),
                     datasets: [
                         {
-                            label: 'Doanh thu',
+                            label: "Doanh thu",
                             data: Object.values(data),
-                            backgroundColor: ['#60a5fa', '#34d399', '#a78bfa'],
+                            backgroundColor: ["#60a5fa", "#34d399", "#a78bfa"],
                         },
                     ],
                 },
@@ -616,49 +612,58 @@
         }
 
         function renderContractChart(data) {
-            destroyChart('contract');
-            charts['contract'] = new Chart(
-                document.getElementById('contractChart'),
+            destroyChart("contract");
+            charts["contract"] = new Chart(
+                document.getElementById("contractChart"),
                 {
-                    type: 'pie',
+                    type: "pie",
                     data: {
                         labels: Object.keys(data),
                         datasets: [
                             {
                                 data: Object.values(data),
-                                backgroundColor: ['#f87171', '#fbbf24', '#34d399'],
+                                backgroundColor: ["#f87171", "#fbbf24", "#34d399"],
                             },
                         ],
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: { legend: { position: 'right' } },
+                        plugins: { legend: { position: "right" } },
                     },
                 }
             );
         }
 
         function renderChurnSpendChart(data) {
-            destroyChart('spend');
-            charts['spend'] = new Chart(
-                document.getElementById('churnSpendChart'),
+            destroyChart("spend");
+            const entries =
+                data && Object.keys(data).length ? data : { "No data": 0 };
+            const labels = Object.keys(entries).map((k) => {
+                if (k === "Yes") return "Churn";
+                if (k === "No") return "Loyal";
+                return k;
+            });
+            charts["spend"] = new Chart(
+                document.getElementById("churnSpendChart"),
                 {
-                    type: 'bar',
+                    type: "bar",
                     data: {
-                        labels: Object.keys(data).map((k) =>
-                            k == 1 ? 'Churn' : 'Loyal'
-                        ),
+                        labels,
                         datasets: [
                             {
-                                label: 'Chi tiêu TB',
-                                data: Object.values(data),
-                                backgroundColor: ['#ef4444', '#10b981'],
+                                label: "Cước tháng TB",
+                                data: Object.keys(entries).map((k) => entries[k]),
+                                backgroundColor: labels.map((label) => {
+                                    if (label === "Churn") return "#ef4444";
+                                    if (label === "Loyal") return "#10b981";
+                                    return "#94a3b8";
+                                }),
                             },
                         ],
                     },
                     options: {
-                        indexAxis: 'y',
+                        indexAxis: "y",
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: { legend: { display: false } },
@@ -670,47 +675,54 @@
         // --- CHART RENDERERS (EDA) ---
         function renderEDACharts(stats) {
             // 1. Churn Distribution
-            destroyChart('churnDist');
-            const distData = stats.target_distribution;
-            charts['churnDist'] = new Chart(document.getElementById('churnChart'), {
-                type: 'doughnut',
+            destroyChart("churnDist");
+            const distData = stats.target_distribution || {};
+            const distLabels = Object.keys(distData).length
+                ? Object.keys(distData)
+                : ["No data"];
+            const distValues = Object.keys(distData).length
+                ? Object.values(distData).map((v) => Number((v * 100).toFixed(1)))
+                : [100];
+            const distColors = ["#ef4444", "#3b82f6", "#fbbf24", "#34d399"];
+            charts["churnDist"] = new Chart(document.getElementById("churnChart"), {
+                type: "doughnut",
                 data: {
-                    labels: Object.keys(distData).map((l) =>
-                        l == 1 ? 'Churn' : 'Loyal'
-                    ),
+                    labels: distLabels,
                     datasets: [
                         {
-                            data: Object.values(distData).map((v) => (v * 100).toFixed(1)),
-                            backgroundColor: ['#ef4444', '#3b82f6'],
+                            data: distValues,
+                            backgroundColor: distLabels.map(
+                                (_, idx) => distColors[idx % distColors.length]
+                            ),
                         },
                     ],
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom' } },
+                    plugins: { legend: { position: "bottom" } },
                 },
             });
 
             // 2. Correlations
-            destroyChart('corr');
-            const corrData = stats.correlations;
-            charts['corr'] = new Chart(document.getElementById('corrChart'), {
-                type: 'bar',
+            destroyChart("corr");
+            const corrData = stats.correlations || {};
+            charts["corr"] = new Chart(document.getElementById("corrChart"), {
+                type: "bar",
                 data: {
                     labels: Object.keys(corrData),
                     datasets: [
                         {
-                            label: 'Hệ số tương quan',
+                            label: "Hệ số tương quan",
                             data: Object.values(corrData),
                             backgroundColor: Object.values(corrData).map((v) =>
-                                v > 0 ? '#f87171' : '#60a5fa'
+                                v > 0 ? "#f87171" : "#60a5fa"
                             ),
                         },
                     ],
                 },
                 options: {
-                    indexAxis: 'y',
+                    indexAxis: "y",
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
@@ -718,17 +730,18 @@
             });
 
             // 3. Categorical Churn Rates
-            destroyChart('cat');
-            const contractChurn = stats.categorical_analysis.churn_by_contract;
-            charts['cat'] = new Chart(document.getElementById('categoryChart'), {
-                type: 'bar',
+            destroyChart("cat");
+            const categoricalStats = stats.categorical_analysis || {};
+            const contractChurn = categoricalStats.churn_by_contract || {};
+            charts["cat"] = new Chart(document.getElementById("categoryChart"), {
+                type: "bar",
                 data: {
                     labels: Object.keys(contractChurn),
                     datasets: [
                         {
-                            label: 'Tỷ lệ Rời bỏ (%)',
+                            label: "Tỷ lệ Rời bỏ (%)",
                             data: Object.values(contractChurn),
-                            backgroundColor: '#fbbf24',
+                            backgroundColor: "#fbbf24",
                         },
                     ],
                 },
@@ -740,17 +753,18 @@
             });
 
             // 4. Tenure Distribution
-            destroyChart('tenure');
-            const tenureData = stats.numerical_distribution.tenure_distribution;
-            charts['tenure'] = new Chart(document.getElementById('tenureChart'), {
-                type: 'bar',
+            destroyChart("tenure");
+            const numericalStats = stats.numerical_distribution || {};
+            const tenureData = numericalStats.tenure_distribution || {};
+            charts["tenure"] = new Chart(document.getElementById("tenureChart"), {
+                type: "bar",
                 data: {
                     labels: Object.keys(tenureData),
                     datasets: [
                         {
-                            label: 'Số lượng khách hàng',
+                            label: "Số lượng khách hàng",
                             data: Object.values(tenureData),
-                            backgroundColor: '#818cf8',
+                            backgroundColor: "#818cf8",
                             tension: 0.4,
                         },
                     ],
@@ -761,63 +775,56 @@
 
         // --- FORM HANDLING ---
         document
-            .getElementById('predict-form')
-            .addEventListener('submit', async (e) => {
+            .getElementById("predict-form")
+            .addEventListener("submit", async (e) => {
                 e.preventDefault();
-                showLoading('Đang dự đoán...');
+                showLoading("Đang dự đoán...");
 
                 const formData = new FormData(e.target);
                 const data = Object.fromEntries(formData.entries());
-                [
-                    'Age',
-                    'Tenure',
-                    'Usage_Frequency',
-                    'Support_Calls',
-                    'Payment_Delay',
-                    'Total_Spend',
-                    'Last_Interaction',
-                ].forEach((f) => {
-                    if (data[f]) data[f] = parseFloat(data[f]);
+                ["tenure", "MonthlyCharges"].forEach((f) => {
+                    if (data[f] !== undefined) data[f] = Number(data[f]);
                 });
 
                 try {
                     const res = await fetch(`${API_URL}/predict`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
                         body: JSON.stringify(data),
                     });
                     const result = await res.json();
-                    if (!res.ok) throw new Error(result.detail || 'Prediction failed');
+                    if (!res.ok) throw new Error(result.detail || "Prediction failed");
 
                     const isChurn = result.prediction === 1;
                     const probPercent = (result.churn_probability * 100).toFixed(1);
 
-                    document.getElementById('prediction-result').innerHTML = `
+                    document.getElementById("prediction-result").innerHTML = `
                 <div class="mb-2"><i class="fas ${isChurn
-                            ? 'fa-exclamation-triangle text-red-500'
-                            : 'fa-check-circle text-green-500'
+                            ? "fa-exclamation-triangle text-red-500"
+                            : "fa-check-circle text-green-500"
                         } text-6xl animate-bounce"></i></div>
-                <h3 class="text-2xl font-bold ${isChurn ? 'text-red-600' : 'text-green-600'
-                        }">${isChurn ? 'NGUY CƠ CAO' : 'AN TOÀN'}</h3>
-                <div class="mt-4 w-full bg-gray-200 rounded-full h-4"><div class="h-4 rounded-full ${isChurn ? 'bg-red-500' : 'bg-green-500'
+                <h3 class="text-2xl font-bold ${isChurn ? "text-red-600" : "text-green-600"
+                        }">${isChurn ? "NGUY CƠ CAO" : "AN TOÀN"}</h3>
+                <div class="mt-4 w-full bg-gray-200 rounded-full h-4"><div class="h-4 rounded-full ${isChurn ? "bg-red-500" : "bg-green-500"
                         }" style="width: ${probPercent}%"></div></div>
                 <p class="mt-2 text-gray-600 font-semibold">Xác suất: ${probPercent}%</p>
             `;
                 } catch (err) {
-                    showMessage(err.message, 'error');
+                    showMessage(err.message, "error");
                 } finally {
                     hideLoading();
                 }
             });
 
         // --- INIT ---
-        switchTab('predict');
+        switchTab("training");
         document
             .querySelectorAll('button[onclick^="switchTab"]')
             .forEach((btn) => {
-                btn.setAttribute('type', 'button');
+                btn.setAttribute("type", "button");
             });
         checkStatus();
+        loadTrainingStatus();
         setInterval(checkStatus, 30000);
     </script>
 </body>
